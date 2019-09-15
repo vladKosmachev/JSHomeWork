@@ -7,9 +7,9 @@
    delayPromise(3) // вернет promise, который будет разрешен через 3 секунды
  */
 function delayPromise(seconds) {
-  return new Promise((resolve) => {
-      setTimeout(resolve, seconds * 1000);
-  })
+    return new Promise((resolve) => {
+        setTimeout(resolve, seconds * 1000);
+    })
 }
 
 /*
@@ -22,22 +22,22 @@ https://raw.githubusercontent.com/smelukov/citiesTest/master/cities.json
  loadAndSortTowns().then(towns => console.log(towns)) // должна вывести в консоль отсортированный массив городов
 */
 function loadAndSortTowns() {
-  const url = 'https://raw.githubusercontent.com/smelukov/citiesTest/master/cities.json';
+    const url = 'https://raw.githubusercontent.com/smelukov/citiesTest/master/cities.json';
 
-  return fetch(url)
-      .then(response => response.json())
-      .then(json => {
-          json.sort((a, b) => {
-              let res = (a.name > b.name) ? 1 : -1 ; 
+    return fetch(url)
+        .then(response => response.json())
+        .then(json => {
+            json.sort((a, b) => {
+                let res = (a.name > b.name) ? 1 : -1 ; 
 
-              return res;
-          });
+                return res;
+            });
 
-          return json;
-      })
+            return json;
+        })
 }
 
 export {
-  delayPromise,
-  loadAndSortTowns
+    delayPromise,
+    loadAndSortTowns
 };

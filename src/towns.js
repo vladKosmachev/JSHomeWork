@@ -1,3 +1,5 @@
+import { rejects } from 'assert';
+
 /*
  Страница должна предварительно загрузить список городов из
  https://raw.githubusercontent.com/smelukov/citiesTest/master/cities.json
@@ -17,12 +19,12 @@
  *** Часть со звездочкой ***
  Если загрузка городов не удалась (например, отключился интернет или сервер вернул ошибку),
  то необходимо показать надпись "Не удалось загрузить города" и кнопку "Повторить".
- При клике на кнопку, процесс загруки повторяется заново
+ При клике на кнопку, процесс загрузки повторяется заново
  */
 
 /*
  homeworkContainer - это контейнер для всех ваших домашних заданий
- Если вы создаете новые html-элементы и добавляете их на страницу, то дабавляйте их только в этот контейнер
+ Если вы создаете новые html-элементы и добавляете их на страницу, то добавляйте их только в этот контейнер
 
  Пример:
    const newDiv = document.createElement('div');
@@ -37,7 +39,28 @@ const homeworkContainer = document.querySelector('#homework-container');
  https://raw.githubusercontent.com/smelukov/citiesTest/master/cities.json
  */
 function loadTowns() {
-    return loadAndSortTowns();
+    return new Promise((resolve, reject) => {
+        fetch('https://raw.githubusercontent.com/smelukov/citiesTest/master/cities.json').then(response => {
+            if (response.status === 200) {
+                return response.json();
+            }
+        }).then(array => {
+            let cities = array.sort((a, b) => {
+
+                if (a.name < b.name) {
+                    return -1;
+                } else if (a.name > b.name) {
+                    return 1;
+                } 
+
+                return 0;
+            });
+
+            resolve(cities);
+        }).catch(() => {
+            reject('Не удалось загрузить города');
+        })
+    });
 }
 
 /*
@@ -52,7 +75,15 @@ function loadTowns() {
    isMatching('Moscow', 'Moscov') // false
  */
 function isMatching(full, chunk) {
-	return full.toUpperCase().includes(chunk.toUpperCase());
+
+    let fullValue = full.toLowerCase();
+    let chunkValue = chunk.toLowerCase();
+
+    if (fullValue.includes(chunkValue)) {
+        return true;
+    } 
+    
+    return false;
 }
 
 /* Блок с надписью "Загрузка" */
@@ -64,36 +95,55 @@ const filterInput = homeworkContainer.querySelector('#filter-input');
 /* Блок с результатами поиска */
 const filterResult = homeworkContainer.querySelector('#filter-result');
 
-loadTowns()
-	.then(sortTowns => {
-		filterBlock.style.display = 'block';
-		loadingBlock.style.display = 'none';
+const replayButton = document.createElement('button');
 
-		filterInput.addEventListener('keyup', function (event) {
-			// это обработчик нажатия кливиш в текстовом поле
-			let chunk = event.target.value;
-			
-			filterResult.innerHTML = '';
-			for (let index = 0; index < sortTowns.length; index++) {
-				const element = sortTowns[index].name;
-				if (isMatching(element, chunk)) {
-					let div = document.createElement('div');
-					div.textContent = element;
-					filterResult.appendChild(div);
+replayButton.textContent = 'Повторить';
+homeworkContainer.appendChild(replayButton);
 
-				}
+let towns;
 
-			}
+function getTowns() {
+    loadTowns().then(result => {
+        filterBlock.style.display = 'block';
+        loadingBlock.style.display = 'none';
 
-			if (!chunk) {
-				filterResult.innerHTML = '';
-			}
-		});
-	})
-	.catch(() => {
-		
-	})
-	
+        towns = result;
+    }).catch(error => {
+        loadingBlock.innerHTML = `${error}`;
+        replayButton.style.display = 'block';
+    }); 
+}
+
+getTowns();
+
+replayButton.addEventListener('click', () => {
+    filterBlock.style.display = 'none';
+    loadingBlock.style.display = 'block';
+    loadingBlock.innerHTML = 'Загрузка...';
+    replayButton.style.display = 'none';
+
+    getTowns();
+});
+
+filterInput.addEventListener('keyup', () => {
+    // это обработчик нажатия кливиш в текстовом поле
+    const value = filterInput.value;
+
+    filterResult.innerHTML = '';
+
+    if (value !== '') {
+        towns.forEach(town => {
+            if (isMatching(town.name, value)) {
+                const li = document.createElement('li');
+
+                li.textContent = town.name;
+                filterResult.appendChild(li);
+            }
+        });
+    }
+
+});
+
 export {
     loadTowns,
     isMatching
